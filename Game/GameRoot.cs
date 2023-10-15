@@ -51,6 +51,9 @@ namespace GameProject {
 
             _fontSystem = new FontSystem();
             _fontSystem.AddFont(TitleContainer.OpenStream($"{Content.RootDirectory}/source-code-pro-medium.ttf"));
+
+            _background = Content.Load<Texture2D>("background");
+            _infinite = Content.Load<Effect>("infinite");
         }
 
         protected override void UnloadContent() {
@@ -93,6 +96,15 @@ namespace GameProject {
         protected override void Draw(GameTime gameTime) {
             _fps.Draw(gameTime);
             GraphicsDevice.Clear(TWColor.Gray700);
+
+            Matrix uv_transform = GetUVTransform(_background, new Vector2(0, 0), 1f, _camera.VirtualViewport);
+
+            _infinite.Parameters["view_projection"].SetValue(Matrix.Identity * _camera.GetProjection());
+            _infinite.Parameters["uv_transform"].SetValue(Matrix.Invert(uv_transform));
+
+            _s.Begin(effect: _infinite, samplerState: SamplerState.LinearWrap);
+            _s.Draw(_background, GraphicsDevice.Viewport.Bounds, Color.White);
+            _s.End();
 
             _sb.Begin(_camera.View);
             _sb.DrawRectangle(_character.Position, _character.Size, TWColor.Gray500, TWColor.Black, 2f);
@@ -203,6 +215,14 @@ namespace GameProject {
             _graphics.PreferredBackBufferHeight = _settings.Height;
             _graphics.ApplyChanges();
         }
+        private Matrix GetUVTransform(Texture2D t, Vector2 offset, float scale, IVirtualViewport v) {
+            return
+                Matrix.CreateScale(t.Width, t.Height, 1f) *
+                Matrix.CreateScale(scale, scale, 1f) *
+                Matrix.CreateTranslation(offset.X, offset.Y, 0f) *
+                _camera.View *
+                Matrix.CreateScale(1f / v.Width, 1f / v.Height, 1f);
+        }
 
         GraphicsDeviceManager _graphics;
         SpriteBatch _s;
@@ -213,6 +233,8 @@ namespace GameProject {
         Camera _camera;
 
         RectangleF _character = new RectangleF(0, 0, 50, 50);
+        Texture2D _background;
+        Effect _infinite;
 
         Settings _settings;
         FontSystem _fontSystem;
