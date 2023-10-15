@@ -9,6 +9,7 @@ using System.Text.Json.Serialization.Metadata;
 using Apos.Camera;
 using Apos.Shapes;
 using MonoGame.Extended;
+using FontStashSharp;
 
 namespace GameProject {
     public class GameRoot : Game {
@@ -47,6 +48,9 @@ namespace GameProject {
 
             // TODO: use this.Content to load your game content here
             InputHelper.Setup(this);
+
+            _fontSystem = new FontSystem();
+            _fontSystem.AddFont(TitleContainer.OpenStream($"{Content.RootDirectory}/source-code-pro-medium.ttf"));
         }
 
         protected override void UnloadContent() {
@@ -60,6 +64,7 @@ namespace GameProject {
         }
 
         protected override void Update(GameTime gameTime) {
+            _fps.Update(gameTime);
             InputHelper.UpdateSetup();
 
             if (_quit.Pressed())
@@ -86,6 +91,7 @@ namespace GameProject {
         }
 
         protected override void Draw(GameTime gameTime) {
+            _fps.Draw(gameTime);
             GraphicsDevice.Clear(TWColor.Gray700);
 
             _sb.Begin(_camera.View);
@@ -94,6 +100,11 @@ namespace GameProject {
             _sb.DrawRectangle(new Vector2(100f, 100f), new Vector2(50f, 50f), TWColor.Red600, TWColor.Black, 2f);
             _sb.DrawRectangle(new Vector2(200f, 100f), new Vector2(50f, 50f), TWColor.Blue600, TWColor.Black, 2f);
             _sb.End();
+
+            var font = _fontSystem.GetFont(24);
+            _s.Begin();
+            _s.DrawString(font, $"FPS: {_fps.FramesPerSecond} -- Dropped: {_fps.DroppedFrames}", new Vector2(10, 10), Color.White);
+            _s.End();
 
             base.Draw(gameTime);
         }
@@ -197,11 +208,14 @@ namespace GameProject {
         SpriteBatch _s;
         ShapeBatch _sb;
 
+        FPSCounter _fps = new FPSCounter();
+
         Camera _camera;
 
         RectangleF _character = new RectangleF(0, 0, 50, 50);
 
         Settings _settings;
+        FontSystem _fontSystem;
 
         ICondition _quit =
             new AnyCondition(
