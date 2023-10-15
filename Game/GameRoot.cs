@@ -37,7 +37,7 @@ namespace GameProject {
                 ApplyFullscreenChange(false);
             }
 
-            _camera = new Camera(new DefaultViewport(GraphicsDevice, Window));
+            _camera = new Camera(new DensityViewport(GraphicsDevice, Window, 500, 500));
 
             base.Initialize();
         }
